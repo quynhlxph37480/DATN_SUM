@@ -91,15 +91,25 @@
                                     <div class="form-group">
                                         <label asp-for="SelectedKichCoIds" class="control-label">Chọn Kích Cỡ:</label>
                                         <div>
+                                            <!-- ✅ Checkbox Chọn tất cả (inline JS) -->
+                                            <input type="checkbox" id="selectAll"
+                                                   onchange="document.querySelectorAll('.kichco-item').forEach(cb => cb.checked = this.checked);" />
+                                            <label for="selectAll"><strong>Chọn tất cả</strong></label>
+                                            <br />
+
+                                            <!-- ✅ Danh sách kích cỡ -->
                                             @foreach (var kichCoOption in Model.KichCoOptions)
                                             {
-                                                <input type="checkbox" name="SelectedKichCoIds" value="@kichCoOption.Value" />
+                                                <input type="checkbox" name="SelectedKichCoIds" value="@kichCoOption.Value" class="kichco-item" />
                                                 <label>@kichCoOption.Text</label>
+
+                                                <br />
                                             }
                                         </div>
                                     </div>
                                 }
                             </div>
+
 
                             <div class="col">
                                 @if (Model.MauSacOptions != null)

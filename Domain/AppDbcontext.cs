@@ -77,7 +77,7 @@ namespace AppData
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
 
-			optionsBuilder.UseSqlServer("Server=ADMIN;Database=daantotnghiep;Trusted_Connection=True;TrustServerCertificate=True;");
+			optionsBuilder.UseSqlServer("Server=QUYNH;Database=daantotnghiep123;Trusted_Connection=True;TrustServerCertificate=True;");
 
 			//Server Của Long
 			//optionsBuilder.UseSqlServer("Server=DESKTOP-UC1K64J\\SQLEXPRESS04;Database=daantotnghiep;Trusted_Connection=True;TrustServerCertificate=True;");
