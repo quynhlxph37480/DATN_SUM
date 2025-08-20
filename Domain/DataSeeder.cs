@@ -49,9 +49,9 @@ namespace AppData
                 new NhanVien()
                 {
                     IdNhanVien = nhanVien2,
-                    TenNhanVien = "Trần Ngọc Hà",
+                    TenNhanVien = "Lê Xuân Quỳnh",
                     SoDienThoai = "0969293263",
-                    Email = "tranha10112004@gmail.com",
+                    Email = "quynhlexuan5@gmail.com",
                     AnhNhanVien = "1.png",
                     MatKhau = "1",
                     AuthProvider = "Local",
@@ -63,42 +63,6 @@ namespace AppData
                     KichHoat = 1,
                     TrangThai = 1,
                     IdchucVu = chucVuQL // Liên kết với ID chức vụ Nhân viên
-                },
-                new NhanVien()
-                {
-                    IdNhanVien = nhanVien3,
-                    TenNhanVien = "Kim Hoàng Long",
-                    SoDienThoai = "0377804800",
-                    Email = "longkhph35837@fpt.edu.vn",
-                    AnhNhanVien = "1.png",
-                    MatKhau = "1",
-                    AuthProvider = "Local",
-                    DiaChi = "Đà Nẵng",
-                    NgayCapNhat = new DateTime(2024, 9, 4),
-                    NgayTao = new DateTime(2024, 9, 4),
-                    NguoiTao = "Admin",
-                    NguoiCapNhat = "Admin",
-                    KichHoat = 1,
-                    TrangThai = 1,
-                    IdchucVu = chucVuNV // Liên kết với ID chức vụ Kế toán
-                },
-                new NhanVien()
-                {
-                    IdNhanVien = nhanVien4,
-                    TenNhanVien = "Đào Thành Nam",
-                    SoDienThoai = "0855896668",
-                    Email = "namdtph39830@fpt.edu.vn",
-                    AnhNhanVien = "1.png",
-                    MatKhau = "1",
-                    AuthProvider = "Local",
-                    DiaChi = "Đà Nẵng",
-                    NgayCapNhat = new DateTime(2024, 9, 4),
-                    NgayTao = new DateTime(2024, 9, 4),
-                    NguoiTao = "Admin",
-                    NguoiCapNhat = "Admin",
-                    KichHoat = 1,
-                    TrangThai = 1,
-                    IdchucVu = chucVuNV // Liên kết với ID chức vụ Thủ kho
                 }
             );
 
