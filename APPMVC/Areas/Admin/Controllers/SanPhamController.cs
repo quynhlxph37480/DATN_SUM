@@ -535,6 +535,7 @@ namespace APPMVC.Areas.Admin.Controllers
                     Gia = chiTiet.Gia,
                     SoLuong = chiTiet.SoLuong,
                     XuatXu = chiTiet.XuatXu,
+                    KichHoat = chiTiet.KichHoat,
                     Chon = false,
                     MaSanPham = chiTiet.MaSp 
                 });

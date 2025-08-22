@@ -190,6 +190,7 @@
                                         <th>Giá</th>
                                         <th>Số lượng</th>
                                         <th>Xuất xứ</th>
+                                        <th>Kích hoạt </th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -269,12 +270,13 @@
                                                 <input type="text" name="SanPhamChiTietList[@Model.SanPhamChiTietList.IndexOf(chiTiet)].XuatXu" value="@chiTiet.XuatXu" class="xuat-xu-input readonly-input" readonly />
                                             </td>
                                             <td>
+                                                <span>@(chiTiet.KichHoat == 1 ? "Hoạt động" : "Không hoạt động")</span>
+                                            </td>
+                                            <td>
                                               <a href="@Url.Action("UpdateSPCT", "SanPham", new { Id = chiTiet.IdSanPhamChiTiet })" class="btn btn-primary" style="margin-right: 5px;">
                                                     <i class="fas fa-edit"></i>
                                              </a>
-                                                <a href="@Url.Action("DeleteSanPhamChiTiet", "SanPham", new { id = chiTiet.IdSanPhamChiTiet })" class="btn btn-danger" style="margin-right: 5px;">
-                                                  <i class="fas fa-trash"></i>
-                                             </a>
+                                                
                                             </td>
                                         </tr>
                                     }
