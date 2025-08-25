@@ -14,38 +14,41 @@ namespace AppAPI.Repository
             _context = appDbcontext;
         }
         // Thông kê ngày
-        public async Task<List<ThongKeNgay>> GetStatisticsByDate(DateTime date)
-        {
-            var startDate = date.Date;
-            var endDate = startDate.AddDays(1);
+            public async Task<List<ThongKeNgay>> GetStatisticsByDate(DateTime date)
+            {
+                var startDate = date.Date;
+                var endDate = startDate.AddDays(1);
 
-            var hoaDonsTrongNgay = await _context.hoaDons
-                .Where(hd => hd.NgayTao >= startDate && hd.NgayTao < endDate)
-                .ToListAsync();
-            var tongtien = await _context.hoaDons
-                .Where(ls => ls.NgayTao >= startDate && ls.NgayTao < endDate
-                && (ls.TrangThai == "Đã Xác Nhận" || ls.TrangThai == "Đã Thanh Toán" || ls.TrangThai == "Hoàn Thành"))
-               .SumAsync(ls => ls.TongTienDonHang);
+                var hoaDonsTrongNgay = await _context.hoaDons
+                    .Where(hd => hd.NgayTao >= startDate && hd.NgayTao < endDate)
+                    .ToListAsync();
+               var tongtien = await _context.hoaDons
+    .Where(ls => ls.NgayTao >= startDate && ls.NgayTao < endDate
+        && (ls.TrangThai == "Đã Xác Nhận" 
+            || ls.TrangThai == "Đã Thanh Toán" 
+            || ls.TrangThai == "Hoàn Thành"))
+    .SumAsync(ls => (ls.TongTienDonHang - (ls.TienGiam ?? 0)));
 
-            var result = hoaDonsTrongNgay
-                .GroupBy(hd => hd.NgayTao.Date)
-                .Select(g => new ThongKeNgay
-                {
-                    Ngay = g.Key,
-                    TongDonHang = g.Count(hd => hd.TrangThai != "Tạo đơn hàng"),
-                    DonHangChoXacNhan = g.Count(hd => hd.TrangThai == "Chờ Xác Nhận"),
-                    DonHangHuy = g.Count(hd => hd.TrangThai == "Đã Hủy"),
-                    DonHangThanhCong = g.Count(hd => hd.TrangThai == "Hoàn Thành" || hd.TrangThai == "Đã Thanh Toán"),
-                    TongTien = tongtien
-                })
-                .ToList();
-            return result;
-        }
+
+                var result = hoaDonsTrongNgay
+                    .GroupBy(hd => hd.NgayTao.Date)
+                    .Select(g => new ThongKeNgay
+                    {
+                        Ngay = g.Key,
+                        TongDonHang = g.Count(hd => hd.TrangThai != "Tạo đơn hàng"),
+                        DonHangChoXacNhan = g.Count(hd => hd.TrangThai == "Chờ Xác Nhận"),
+                        DonHangHuy = g.Count(hd => hd.TrangThai == "Đã Hủy"),
+                        DonHangThanhCong = g.Count(hd => hd.TrangThai == "Hoàn Thành" || hd.TrangThai == "Đã Thanh Toán"),
+                        TongTien = tongtien
+                    })
+                    .ToList();
+                return result;
+            }
 
         //Thống kê tuần
         public async Task<List<ThongKeNgay>> GetStatisticsByWeek(DateTime date)
         {
-            // Lấy ngày bắt đầu và kết thúc tuần
+            // Lấy ngày bắt đầu và kết thúc tuần (bắt đầu từ Chủ Nhật)
             var startOfWeek = date.Date.AddDays(-(int)date.DayOfWeek);
             var endOfWeek = startOfWeek.AddDays(7);
 
@@ -54,24 +57,25 @@ namespace AppAPI.Repository
                 .Where(hd => hd.NgayTao >= startOfWeek && hd.NgayTao < endOfWeek)
                 .ToListAsync();
 
-            // Tổng tiền chỉ tính các đơn đã xác nhận trở lên
-            var tongtien = await _context.hoaDons
-                .Where(ls => ls.NgayTao >= startOfWeek && ls.NgayTao < endOfWeek &&
-                             (ls.TrangThai == "Đã Xác Nhận" || ls.TrangThai == "Đã Thanh Toán" || ls.TrangThai == "Hoàn Thành"))
-                .SumAsync(ls => ls.TongTienDonHang);
+            // Tổng tiền chỉ tính các đơn đã xác nhận trở lên, có trừ TienGiam
+            var tongtien = hoaDonsTrongTuan
+                .Where(ls => ls.TrangThai == "Đã Xác Nhận"
+                          || ls.TrangThai == "Đã Thanh Toán"
+                          || ls.TrangThai == "Hoàn Thành")
+                .Sum(ls => (ls.TongTienDonHang - (ls.TienGiam ?? 0)));
 
             // Gom lại thành 1 bản thống kê tổng cho cả tuần
-            var result = hoaDonsTrongTuan
-                .GroupBy(_ => true) // gom tất cả vào 1 nhóm
-                .Select(g => new ThongKeNgay
-                {
-                    TongDonHang = g.Count(hd => hd.TrangThai != "Tạo đơn hàng"),
-                    DonHangChoXacNhan = g.Count(hd => hd.TrangThai == "Chờ Xác Nhận"),
-                    DonHangHuy = g.Count(hd => hd.TrangThai == "Đã Hủy"),
-                    DonHangThanhCong = g.Count(hd => hd.TrangThai == "Hoàn Thành" || hd.TrangThai == "Đã Thanh Toán"),
-                    TongTien = tongtien
-                })
-                .ToList();
+            var result = new List<ThongKeNgay>
+    {
+        new ThongKeNgay
+        {
+            TongDonHang = hoaDonsTrongTuan.Count(hd => hd.TrangThai != "Tạo đơn hàng"),
+            DonHangChoXacNhan = hoaDonsTrongTuan.Count(hd => hd.TrangThai == "Chờ Xác Nhận"),
+            DonHangHuy = hoaDonsTrongTuan.Count(hd => hd.TrangThai == "Đã Hủy"),
+            DonHangThanhCong = hoaDonsTrongTuan.Count(hd => hd.TrangThai == "Hoàn Thành" || hd.TrangThai == "Đã Thanh Toán"),
+            TongTien = tongtien
+        }
+    };
 
             return result;
         }
@@ -88,27 +92,29 @@ namespace AppAPI.Repository
                 .Where(hd => hd.NgayTao >= startOfMonth && hd.NgayTao < endOfMonth)
                 .ToListAsync();
 
-            // Chỉ tính tổng tiền những đơn đã xác nhận trở lên
-            var tongtien = await _context.hoaDons
-                .Where(ls => ls.NgayTao >= startOfMonth && ls.NgayTao < endOfMonth &&
-                             (ls.TrangThai == "Đã Xác Nhận" || ls.TrangThai == "Đã Thanh Toán" || ls.TrangThai == "Hoàn Thành"))
-                .SumAsync(ls => ls.TongTienDonHang);
+            // Chỉ tính tổng tiền những đơn đã xác nhận trở lên, có trừ TienGiam
+            var tongtien = hoaDonsTrongThang
+                .Where(ls => ls.TrangThai == "Đã Xác Nhận"
+                          || ls.TrangThai == "Đã Thanh Toán"
+                          || ls.TrangThai == "Hoàn Thành")
+                .Sum(ls => (ls.TongTienDonHang - (ls.TienGiam ?? 0)));
 
             // Gom tất cả thành 1 thống kê chung cho cả tháng
-            var result = hoaDonsTrongThang
-                .GroupBy(_ => true)
-                .Select(g => new ThongKeNgay
-                {
-                    TongDonHang = g.Count(hd => hd.TrangThai != "Tạo đơn hàng"),
-                    DonHangChoXacNhan = g.Count(hd => hd.TrangThai == "Chờ Xác Nhận"),
-                    DonHangHuy = g.Count(hd => hd.TrangThai == "Đã Hủy"),
-                    DonHangThanhCong = g.Count(hd => hd.TrangThai == "Hoàn Thành" || hd.TrangThai == "Đã Thanh Toán"),
-                    TongTien = tongtien
-                })
-                .ToList();
+            var result = new List<ThongKeNgay>
+    {
+        new ThongKeNgay
+        {
+            TongDonHang = hoaDonsTrongThang.Count(hd => hd.TrangThai != "Tạo đơn hàng"),
+            DonHangChoXacNhan = hoaDonsTrongThang.Count(hd => hd.TrangThai == "Chờ Xác Nhận"),
+            DonHangHuy = hoaDonsTrongThang.Count(hd => hd.TrangThai == "Đã Hủy"),
+            DonHangThanhCong = hoaDonsTrongThang.Count(hd => hd.TrangThai == "Hoàn Thành" || hd.TrangThai == "Đã Thanh Toán"),
+            TongTien = tongtien
+        }
+    };
 
             return result;
         }
+
 
         //Thống kê năm
         public async Task<List<ThongKeThang>> GetStatisticsByYear(int year)
@@ -118,11 +124,13 @@ namespace AppAPI.Repository
                 .Where(hd => hd.NgayTao.Year == year)
                 .ToListAsync();
 
-            // Chỉ tính tổng tiền những đơn đã xác nhận trở lên
-            var tongTienTheoThang = await _context.hoaDons
+            // Chỉ tính tổng tiền những đơn đã xác nhận trở lên, có trừ TienGiam (voucher)
+            var tongTienTheoNam = await _context.hoaDons
                 .Where(ls => ls.NgayTao.Year == year &&
-                             (ls.TrangThai == "Đã Xác Nhận" || ls.TrangThai == "Đã Thanh Toán" || ls.TrangThai == "Hoàn Thành"))
-                .SumAsync(ls => ls.TongTienDonHang);
+                             (ls.TrangThai == "Đã Xác Nhận"
+                              || ls.TrangThai == "Đã Thanh Toán"
+                              || ls.TrangThai == "Hoàn Thành"))
+                .SumAsync(ls => (ls.TongTienDonHang - (ls.TienGiam ?? 0)));
 
             // Gom tất cả lại thành một thống kê tổng cho cả năm
             var result = hoaDonsTrongNam
@@ -133,7 +141,7 @@ namespace AppAPI.Repository
                     DonHangChoXacNhan = g.Count(hd => hd.TrangThai == "Chờ Xác Nhận"),
                     DonHangHuy = g.Count(hd => hd.TrangThai == "Đã Hủy"),
                     DonHangThanhCong = g.Count(hd => hd.TrangThai == "Hoàn Thành" || hd.TrangThai == "Đã Thanh Toán"),
-                    TongTien = tongTienTheoThang
+                    TongTien = tongTienTheoNam
                 })
                 .ToList();
 
@@ -143,18 +151,25 @@ namespace AppAPI.Repository
         //Thông kê tổng quan
         public async Task<ThongKeTongQuan> GetTotalOrdersAndRevenue()
         {
-            int totalOrders = await _context.hoaDons.CountAsync(hd => hd.TrangThai != "Tạo đơn hàng");
+            // Đếm tổng đơn (loại bỏ đơn mới tạo)
+            int totalOrders = await _context.hoaDons
+                .CountAsync(hd => hd.TrangThai != "Tạo đơn hàng");
 
+            // Tính tổng doanh thu (chỉ lấy đơn đã xác nhận/thanh toán/hoàn thành)
             double totalRevenue = await _context.hoaDons
-                .Where(hd => (hd.TrangThai == "Đã Xác Nhận" || hd.TrangThai == "Đã Thanh Toán" || hd.TrangThai == "Hoàn Thành"))
-                .SumAsync(hd => hd.TongTienDonHang);
-          
+                .Where(hd => hd.TrangThai == "Đã Xác Nhận"
+                          || hd.TrangThai == "Đã Thanh Toán"
+                          || hd.TrangThai == "Hoàn Thành")
+                .SumAsync(hd => (hd.TongTienDonHang - (hd.TienGiam ?? 0)));
+            // nếu GiamGia có thể null thì dùng (?? 0)
+
             return new ThongKeTongQuan
             {
                 TongDonHang = totalOrders,
                 TongDoanhThu = totalRevenue
             };
         }
+
 
         //Lọc
         public async Task<List<ThongKeKhoangThoiGian>> GetStatisticsByTimeRange(DateTime startDate, DateTime endDate)
@@ -163,10 +178,18 @@ namespace AppAPI.Repository
                 .Where(hd => hd.NgayTao.Date >= startDate.Date && hd.NgayTao.Date <= endDate.Date)
                 .ToListAsync();
 
+            // Tính doanh thu sau khi trừ voucher
             var tongTienTrongKhoang = await _context.hoaDons
-                .Where(ls => ls.NgayTao.Date >= startDate.Date && ls.NgayTao.Date <= endDate.Date && ls.TrangThai != "Chờ Xác Nhận" && ls.TrangThai != "Đã Hủy")
+                .Where(ls => ls.NgayTao.Date >= startDate.Date
+                          && ls.NgayTao.Date <= endDate.Date
+                          && ls.TrangThai != "Chờ Xác Nhận"
+                          && ls.TrangThai != "Đã Hủy")
                 .GroupBy(ls => ls.NgayTao.Date)
-                .Select(g => new { Ngay = g.Key, TongTien = g.Sum(ls => ls.TongTienDonHang) })
+                .Select(g => new
+                {
+                    Ngay = g.Key,
+                    TongTien = g.Sum(ls => (ls.TongTienDonHang - (ls.TienGiam ?? 0)))
+                })
                 .ToListAsync();
 
             // Thống kê theo ngày
@@ -179,12 +202,14 @@ namespace AppAPI.Repository
                     DonHangChoXacNhan = g.Count(hd => hd.TrangThai == "Chờ Xác Nhận"),
                     DonHangHuy = g.Count(hd => hd.TrangThai == "Đã Hủy"),
                     DonHangThanhCong = g.Count(hd => hd.TrangThai == "Đã Thanh Toán" || hd.TrangThai == "Hoàn Thành"),
-                    TongDoanhThu = tongTienTrongKhoang.FirstOrDefault(t => t.Ngay == g.Key)?.TongTien ?? 0 // Ghép tổng tiền
+                    TongDoanhThu = tongTienTrongKhoang.FirstOrDefault(t => t.Ngay == g.Key)?.TongTien ?? 0
                 })
                 .OrderBy(tk => tk.Ngay)
                 .ToList();
+
             return result;
         }
+
 
 
         //sản phẩm bán chạy
