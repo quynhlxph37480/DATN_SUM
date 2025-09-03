@@ -31,7 +31,7 @@ namespace AppAPI.Controllers
 
             var cacheOptions = new DistributedCacheEntryOptions
             {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(3)
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
             };
             await _cache.SetStringAsync($"VerificationCode_{email}", verificationCode, cacheOptions);
 
